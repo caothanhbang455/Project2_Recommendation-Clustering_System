@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import pickle
 import re
+import os  # 
+import requests  # 
 import streamlit as st
 from pyvi import ViTokenizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -49,11 +51,35 @@ def preprocess_text(text, teencode, emoji_dict, stopwords):
     return ' '.join(cleaned_tokens).strip()
 
 # --- LOAD MODELS ---
+# --- LOAD MODELS ---
 @st.cache_resource
 def load_recommender_system():
+    # 1. Load Vectorizer (File này nhẹ nên vẫn để trong repo, load bình thường)
     with open('models/tfidf_vectorizer.pkl', 'rb') as f:
         vectorizer = pickle.load(f)
-    with open('models/xe_cosine_sim.pkl', 'rb') as f:
+
+    # 2. Load Cosine Matrix (File nặng - Tải từ GitHub Release)
+    file_path = 'models/xe_cosine_sim.pkl'
+    
+    # --- BẮT ĐẦU SỬA TẠI ĐÂY ---
+    # Link bạn vừa copy từ GitHub Releases (Lưu ý: Phải là link trực tiếp để tải file)
+    # Ví dụ link đúng thường kết thúc bằng .pkl hoặc download/v1.0/xe_cosine_sim.pkl
+    url = 'https://github.com/caothanhbang455/Project2_Recommendation-Clustering_System/releases/download/v1.0.0/xe_cosine_sim.pkl' 
+
+    # Kiểm tra nếu file chưa tồn tại thì tải về
+    if not os.path.exists(file_path):
+        try:
+            with st.spinner('Đang tải dữ liệu model (lần đầu)... vui lòng đợi'):
+                response = requests.get(url)
+                response.raise_for_status() # Báo lỗi nếu link sai
+                with open(file_path, 'wb') as f:
+                    f.write(response.content)
+        except Exception as e:
+            st.error(f"Không tải được file model từ GitHub Releases. Lỗi: {e}")
+            return None, None, None, None
+    # --- KẾT THÚC SỬA ---
+
+    with open(file_path, 'rb') as f:
         cosine_sim = pickle.load(f)
     try:
         df = pd.read_csv('data/data_motobikes_cleaned_text.csv') 

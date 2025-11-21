@@ -6,3 +6,4 @@ pyvi
 kmodes
 plotly
 openpyxl
+requests
