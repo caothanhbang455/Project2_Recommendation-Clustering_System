@@ -7,3 +7,4 @@ kmodes
 plotly
 openpyxl
 requests
+matplotlib
