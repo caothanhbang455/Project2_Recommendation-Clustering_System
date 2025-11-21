@@ -8,3 +8,4 @@ plotly
 openpyxl
 requests
 matplotlib
+seaborn
