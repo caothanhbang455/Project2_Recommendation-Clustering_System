@@ -228,21 +228,77 @@ st.markdown("""
         padding-bottom: 2rem !important;
     }
     
-    /* Recommendation Card */
-    .rec-card {
-        background: white;
-        border-radius: 12px;
-        padding: 16px;
+    /* Recommendation Card - Grid Style */
+    .rec-card-grid {
+        background: white; 
+        border-radius: 12px; 
+        padding: 15px; 
         border: 1px solid #E2E8F0;
-        transition: transform 0.2s;
-        margin-bottom: 10px;
+        transition: transform 0.2s; 
+        margin-bottom: 15px; 
+        height: 350px;
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between;
     }
-    .rec-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .rec-card-grid:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     
+    /* Badge Style for Clusters */
+    .cluster-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 5px;
+    }
+
     /* Fix màu chữ cho các text khác trong app chính nếu bị trắng */
     .stMarkdown, .stText, p {
         color: #1E293B; 
     }
+    
+    /* Button Styles */
+    div.stButton > button:first-child {
+        background-color: white; border: 1px solid #E2E8F0; color: #1E293B;
+    }
+    div.stButton > button:active { background-color: #EFF6FF; }
+            
+    /* CSS cho trang chi tiết */
+    .detail-header {
+        background: linear-gradient(90deg, #1E3A8A 0%, #3B82F6 100%);
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 20px;
+    }
+    .spec-box {
+        background-color: white;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #E2E8F0;
+        margin-bottom: 10px;
+    }
+    .spec-label {
+        color: #64748B;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+    .spec-value {
+        color: #0F172A;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    .price-tag {
+        font-size: 28px; 
+        font-weight: 800; 
+        color: #10B981; /* Màu xanh lá tiền tệ */
+        background: #ECFDF5;
+        padding: 5px 15px;
+        border-radius: 8px;
+        display: inline-block;
+    }
+            
 </style>
 """, unsafe_allow_html=True)
 
@@ -264,80 +320,411 @@ with st.sidebar:
     st.markdown("### 🧭 Navigation")
     app_mode = st.radio(
         "Select Module:",
-        ["User Mode (Recommender)", "Admin Mode (Clustering)"],
+        [
+            "Project Introduction", 
+            "User Mode (Recommender)", 
+            "Admin Mode (Clustering)"
+        ],
         label_visibility="collapsed"
     )
     
     st.markdown("---")
     with st.expander("ℹ️ System Info"):
-        st.info("Last Updated: Nov 2025\nVersion: 2.1.0 (Stable)")
+        st.info("Last Updated: Nov 2025\nVersion: 2.3.0 (Dynamic GMM)")
+
+# ==================================================
+# MODULE 0: PROJECT INTRODUCTION
+# ==================================================
+if app_mode == "Project Introduction":
+    st.markdown("""
+    <div style="text-align: center; padding: 30px 0;">
+        <h1 style="color: #1E3A8A; font-size: 36px;">Project Overview & Methodology</h1>
+        <p style="font-size: 18px; color: #64748B;">Motorbike Recommendation & Market Segmentation Analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("### 1. Problem Statement")
+    st.markdown("""
+    The used motorbike market on Chotot involves a massive volume of listings, making it difficult for users to find vehicles that match their specific needs and for sellers to understand appropriate pricing strategies. This project addresses two core challenges:
+    * **Information Overload:** Users struggle to filter through thousands of unstandardized listings.
+    * **Market Ambiguity:** Lack of clear price segmentation makes it hard to categorize vehicles into Budget, Mid-range, or Premium tiers.
+    """)
+    
+    st.divider()
+
+    col_intro_1, col_intro_2 = st.columns(2, gap="large")
+
+    with col_intro_1:
+        st.markdown("### 2. Recommendation Engine")
+        st.markdown("""
+        **Objective:** To provide personalized motorbike suggestions based on user search queries using Content-Based Filtering.
+        
+        **Methodology & Technologies:**
+        * **TF-IDF Vectorization:** We utilize Term Frequency-Inverse Document Frequency to convert unstructured text descriptions (listings) into numerical vectors, highlighting unique features of each bike.
+        * **Cosine Similarity:** To measure the relevance between a user's query and the database listings. The system calculates the cosine of the angle between vectors; a value closer to 1 indicates a high degree of similarity.
+        * **NLP Preprocessing:** Integration of Vietnamese stopword removal, teencode normalization, and emoji handling to clean raw input data.
+        """)
+
+    with col_intro_2:
+        st.markdown("### 3. Market Segmentation (Clustering)")
+        st.markdown("""
+        **Objective:** To group motorbikes into distinct market segments based on price, usage (odometer), and age (year).
+        
+        **Methodology & Technologies:**
+        * **K-Means Clustering:** A robust algorithm used for partitioning numeric data (Price, Year, Km) into $K$ distinct non-overlapping subgroups (clusters).
+        * **K-Prototypes:** An extension of K-Means that handles mixed data types, allowing us to cluster based on both categorical features (Brand, Type) and numerical features.
+        * **Gaussian Mixture Models (GMM):** A probabilistic model that assumes all data points are generated from a mixture of a finite number of Gaussian distributions with unknown parameters.
+        """)
+    
+    st.info("**Navigation:** Use the sidebar to switch between the User Search Interface and the Admin Analytics Dashboard.")
 
 # ==================================================
 # MODULE 1: USER MODE (RECOMMENDER)
 # ==================================================
-if app_mode == "User Mode (Recommender)":
-    st.markdown("""
-    <div style="text-align: center; padding: 40px 0;">
-        <h1 style="color: #1E3A8A; font-size: 42px;">Find Your Dream Ride</h1>
-        <p style="font-size: 18px; color: #64748B;">AI-Powered Smart Search & Matching System</p>
-    </div>
-    """, unsafe_allow_html=True)
+elif app_mode == "User Mode (Recommender)":
     
-    # Initialize
-    with st.spinner("🚀 Booting up search engine..."):
-        vectorizer, tfidf_matrix, cosine_sim, df_bikes = load_recommender_system()
+    # --- SESSION STATE INITIALIZATION ---
+    if 'page' not in st.session_state:
+        st.session_state.page = 0
+    if 'selected_bike' not in st.session_state:
+        st.session_state.selected_bike = None
+    if 'search_results' not in st.session_state:
+        st.session_state.search_results = None
 
-    # Search Bar
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        search_query = st.text_input("", placeholder="Example: Vision red color, cheap price, Hanoi...", label_visibility="collapsed")
-    with col2:
-        num_results = st.selectbox("", [5, 10, 15, 20], index=0, label_visibility="collapsed")
-    
-    if st.button("🔍 SEARCH MATCHES", type="primary", use_container_width=True):
-        if search_query:
-            results_df = out_recommend_motorbike(search_query, num_results, df_bikes, vectorizer, tfidf_matrix, teencode, emoji, stopwords)
+    # Load Resources
+    # Load Resources
+    # Load Resources
+    with st.spinner("🚀 Booting up & Analyzing GMM Segments..."):
+        teencode, emoji, stopwords = load_resources()
+        vectorizer, tfidf_matrix, cosine_sim, df_bikes = load_recommender_system()
+        
+        # --- DYNAMIC CLUSTER MAPPING (GMM + ISOLATION FOREST) ---
+        # 1. Load Model & Data
+        cl_scaler, cl_model, cl_iso_model, df_encoded, cl_mode = load_clustering_model("GMM")
+        
+        cluster_map = {}
+        
+        if cl_model is not None and df_encoded is not None:
+            try:
+                # 2. Chạy dự đoán trên toàn bộ tập dữ liệu (Training Set)
+                # Lý do: Ta cần biết dữ liệu phân bố thực tế thế nào để tính "Tâm cụm thực tế"
+                # Hàm run_clustering_inference đã bao gồm logic Isolation Forest (nếu có)
+                labels, _, outliers = run_clustering_inference(
+                    df_encoded, cl_scaler, cl_model, cl_iso_model, cl_mode
+                )
+                
+                # 3. Xử lý Outliers (Quan trọng: Loại bỏ nhiễu khỏi việc tính toán tâm cụm)
+                # Nếu Isolation Forest đánh dấu là outlier (True), ta gán nhãn -1 để lọc ra
+                final_labels = labels.copy()
+                if outliers is not None:
+                    final_labels[outliers] = -1
+                
+                # 4. Tính Profile (Trung bình) của từng cụm dựa trên dữ liệu thực tế
+                # Sử dụng hàm calculate_cluster_profiles có sẵn trong utils
+                df_profiles = calculate_cluster_profiles(df_encoded, final_labels)
+                
+                # 5. Loại bỏ cụm rác (-1) nếu có
+                df_profiles = df_profiles[df_profiles['Cluster'] != -1]
+                
+                # 6. Sắp xếp các cụm theo mức giá trung bình (Tăng dần)
+                # Giả định cột 'Giá' tồn tại trong df_encoded
+                if 'Giá' in df_profiles.columns:
+                    df_profiles = df_profiles.sort_values(by='Giá')
+                    
+                    # 7. Gán nhãn phân khúc dựa trên thứ tự giá
+                    labels_def = [
+                        ("Tiết kiệm", "#10B981"),  # Xanh lá - Giá thấp nhất
+                        ("Phổ thông", "#3B82F6"),  # Xanh dương - Giá giữa
+                        ("Cao cấp",   "#F59E0B")   # Cam/Vàng - Giá cao nhất
+                    ]
+                    
+                    # Lặp qua các cụm đã sắp xếp và gán vào map
+                    for rank, row in enumerate(df_profiles.itertuples()):
+                        c_id = int(row.Cluster)
+                        if rank < len(labels_def):
+                            name, color = labels_def[rank]
+                            cluster_map[c_id] = (name, color)
+                        else:
+                            cluster_map[c_id] = (f"Phân khúc {rank+1}", "#64748B")
+            except Exception as e:
+                # Fallback nếu có lỗi xảy ra
+                cluster_map = {}
+        else:
+            cluster_map = {}
+    with st.spinner("🚀 Booting up & Analyzing GMM Segments..."):
+        teencode, emoji, stopwords = load_resources()
+        vectorizer, tfidf_matrix, cosine_sim, df_bikes = load_recommender_system()
+        
+        # --- DYNAMIC CLUSTER MAPPING (GMM) - LOGIC MỚI DỰA TRÊN CENTROIDS ---
+        # 1. Load GMM Model
+        cl_scaler, cl_model, _, df_encoded, cl_mode = load_clustering_model("GMM")
+        
+        cluster_map = {}
+        
+        # Chỉ chạy logic này nếu load được model GMM và tìm thấy thuộc tính means_ (centroids)
+        if cl_model is not None and hasattr(cl_model, 'means_'):
+            try:
+                # B1: Xác định vị trí cột "Giá" trong dữ liệu training
+                # df_encoded trả về từ utils đã khớp cột với lúc train model
+                price_index = df_encoded.columns.get_loc("Giá")
+                
+                # B2: Lấy giá trị tại cột "Giá" của các tâm cụm (Centroids)
+                # cl_model.means_ là mảng (n_clusters, n_features) chứa toạ độ tâm
+                # Kết quả list: [(Cluster_ID_0, Giá_Tâm_0), (Cluster_ID_1, Giá_Tâm_1), ...]
+                clusters_info = []
+                for c_id, centroid in enumerate(cl_model.means_):
+                    center_price = centroid[price_index]
+                    clusters_info.append((c_id, center_price))
+                
+                # B3: Sắp xếp các cụm dựa trên Giá Tâm từ THẤP -> CAO
+                # Cụm nào có tâm giá nhỏ nhất sẽ lên đầu
+                clusters_info.sort(key=lambda x: x[1])
+                
+                # B4: Gán nhãn theo thứ tự
+                # Rank 0 (Thấp nhất) -> Tiết kiệm
+                # Rank 1 (Giữa)      -> Phổ thông
+                # Rank 2 (Cao nhất)  -> Cao cấp
+                labels_def = [
+                    ("Tiết kiệm", "#10B981"),  # Green
+                    ("Phổ thông", "#3B82F6"),  # Blue
+                    ("Cao cấp",   "#F59E0B")   # Orange
+                ]
+                
+                for rank, (c_id, val) in enumerate(clusters_info):
+                    if rank < len(labels_def):
+                        name, color = labels_def[rank]
+                        cluster_map[c_id] = (name, color)
+                    else:
+                        # Dự phòng cho trường hợp K > 3
+                        cluster_map[c_id] = (f"Phân khúc {rank+1}", "#64748B")
+                        
+            except Exception as e:
+                st.error(f"Lỗi khi mapping GMM Centroids: {e}")
+                cluster_map = {}
+        else:
+            cluster_map = {}
+
+    # --- VIEW: DETAIL PAGE ---
+    # --- VIEW: DETAIL PAGE ---
+    if st.session_state.selected_bike is not None:
+        bike = st.session_state.selected_bike
+        
+        # Nút quay lại
+        if st.button("⬅️ Quay lại danh sách", type="secondary"):
+            st.session_state.selected_bike = None
+            st.rerun()
             
-            st.markdown(f"### 🎯 Found {len(results_df)} matches")
+        # 1. HEADER SECTION (Tiêu đề & Giá)
+        st.markdown(f"""
+        <div class="detail-header">
+            <h2 style="color: white; margin:0;">{bike.get('Tiêu đề', 'Chi tiết xe')}</h2>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 15px;">
+                <span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px;">📍 {bike.get('Địa chỉ', '').split(',')[-1].strip()}</span>
+                <span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px;">📅 Đăng tin: 2024</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 2. KEY METRICS (Hàng ngang thông số chính)
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Năm sản xuất", bike.get('Năm đăng ký', 'N/A'), border=True)
+        m2.metric("Odometer (Km)", f"{bike.get('Số Km đã đi', 0):,}", border=True)
+        m3.metric("Phân khối", bike.get('Dung tích xe', 'N/A'), border=True)
+        m4.metric("Tình trạng", bike.get('Tình trạng', 'Đã sử dụng'), border=True)
+
+        st.markdown("---")
+
+        # 3. MAIN CONTENT (Chia 2 cột: Specs vs Price/Action)
+        c_specs, c_info = st.columns([1.5, 1], gap="large")
+
+        with c_specs:
+            st.markdown("### 🛠️ Thông số kỹ thuật")
+            
+            # Tạo Grid hiển thị thông số bằng HTML/CSS custom
+            specs_data = {
+                "Thương hiệu": bike.get('Thương hiệu', 'N/A'),
+                "Dòng xe": bike.get('Dòng xe', 'N/A'),
+                "Loại xe": bike.get('Loại xe', 'N/A'),
+                "Xuất xứ": bike.get('Xuất xứ', 'N/A'),
+                "Bảo hành": bike.get('Chính sách bảo hành', 'N/A'),
+                "Trọng lượng": bike.get('Trọng lượng', 'N/A')
+            }
+            
+            # Render Grid 2 cột cho Specs
+            cols = st.columns(2)
+            for i, (k, v) in enumerate(specs_data.items()):
+                with cols[i % 2]:
+                    st.markdown(f"""
+                    <div class="spec-box">
+                        <div class="spec-label">{k}</div>
+                        <div class="spec-value">{v}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("### 📝 Mô tả người bán")
+            description = bike.get('Mô tả chi tiết', bike.get('description', 'Không có mô tả.'))
+            st.markdown(f"""
+            <div style="background: #F8FAFC; padding: 15px; border-radius: 8px; border-left: 4px solid #3B82F6; color: #334155;">
+                {description.replace('_', '<br>• ')}
+            </div>
+            """, unsafe_allow_html=True)
+
+        with c_info:
+            st.markdown("### 💵 Phân tích giá")
+            
+            current_price_str = str(bike.get('Giá', '0')).replace('.', '').replace(' đ', '')
+            try:
+                current_price = float(current_price_str)
+            except:
+                current_price = 0
+                
+            st.markdown(f'<div class="price-tag">{bike.get("Giá", "Liên hệ")}</div>', unsafe_allow_html=True)
+            
+            # Hiển thị khoảng giá thị trường
+            min_p = bike.get('Khoảng giá min', 'N/A')
+            max_p = bike.get('Khoảng giá max', 'N/A')
+            
+            st.markdown(f"""
+            <div style="margin-top: 15px; padding: 15px; border: 1px dashed #CBD5E1; border-radius: 8px;">
+                <div style="color: #64748B; font-size: 13px;">Khoảng giá thị trường (tham khảo):</div>
+                <div style="font-weight: bold; color: #1E293B; font-size: 18px;">{min_p} - {max_p}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Logic tính toán cụm phân khúc (Cluster) - Lấy lại logic cũ
+            try:
+                # Tạo data input giả lập để predict
+                p_val = current_price / 1e6
+                p_input = {
+                    "Khoảng giá min": p_val, "Khoảng giá max": p_val, "Giá": p_val,
+                    "Năm đăng ký": float(bike.get('Năm đăng ký', 2019)),
+                    "Số Km đã đi": float(bike.get('Số Km đã đi', 10000))
+                }
+                c_id = predict_new_sample(p_input, cl_scaler, cl_model, cl_mode)
+                c_name, c_color = cluster_map.get(c_id, ("Không xác định", "#94A3B8"))
+                
+                st.markdown(f"""
+                <div style="margin-top: 10px;">
+                    <span style="font-size:13px; color:#64748B;">Phân khúc AI gợi ý:</span><br>
+                    <span style="background-color:{c_color}; color:white; padding: 4px 12px; border-radius: 12px; font-weight:bold; font-size:14px;">
+                        {c_name}
+                    </span>
+                </div>
+                """, unsafe_allow_html=True)
+            except:
+                pass
+
             st.markdown("<br>", unsafe_allow_html=True)
             
-            for idx, row in results_df.iterrows():
-                title = row.get('title', row.get('Tiêu đề', 'No Title'))
-                price = row.get('Giá', 'Contact')
-                desc = row.get('description', row.get('Mô tả chi tiết', 'No description'))
-                score = row['cosine_score']
+            # Nút Action
+            st.markdown("### 📞 Liên hệ")
+            url = bike.get('Href', bike.get('url', '#'))
+            st.link_button("👉 Xem tin gốc & Gọi người bán", url, type="primary", use_container_width=True)
+            
+            st.info("⚠️ Lưu ý: MotoAI chỉ tổng hợp thông tin. Vui lòng kiểm tra xe thực tế trước khi giao dịch.")
+
+    # --- VIEW: LISTING GRID (Mặc định) ---
+    else:
+        st.markdown("""
+        <div style="text-align: center; padding: 20px 0;">
+            <h1 style="color: #1E3A8A;">Find Your Dream Ride</h1>
+            <p style="color: #64748B;">AI-Powered Smart Search & Segmentation</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Search Bar
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            search_query = st.text_input("", placeholder="Example: Vision red color, cheap price...", label_visibility="collapsed")
+        with col2:
+            if st.button("🔍 Search", type="primary", use_container_width=True):
+                st.session_state.page = 0
                 
-                with st.container():
+        # Logic Search
+        if search_query:
+            # Get recommender results (Top 200 matches)
+            results = out_recommend_motorbike(search_query, 200, df_bikes, vectorizer, tfidf_matrix, teencode, emoji, stopwords)
+            st.session_state.search_results = results
+        elif st.session_state.search_results is None:
+            # Default: Use the RAW dataframe (Full List)
+            st.session_state.search_results = df_bikes.copy()
+
+        # Pagination Logic
+        current_df = st.session_state.search_results
+        items_per_page = 12 # 3x4 layout
+        total_items = len(current_df)
+        total_pages = max(1, (total_items + items_per_page - 1) // items_per_page)
+        
+        # Safety check for page index
+        if st.session_state.page >= total_pages: st.session_state.page = total_pages - 1
+        if st.session_state.page < 0: st.session_state.page = 0
+        
+        start_idx = st.session_state.page * items_per_page
+        end_idx = min(start_idx + items_per_page, total_items)
+        
+        page_items = current_df.iloc[start_idx:end_idx]
+
+        st.markdown(f"**Showing {start_idx+1}-{end_idx} of {total_items} results**")
+
+        # --- GRID DISPLAY 3x4 ---
+        # Create chunks of 3 for the columns
+        rows = [page_items.iloc[i:i+3] for i in range(0, len(page_items), 3)]
+        
+        for row_items in rows:
+            cols = st.columns(3)
+            for i, (idx, row) in enumerate(row_items.iterrows()):
+                with cols[i]:
+                    # Extract Info
+                    title = row.get('title', row.get('Tiêu đề', 'Motorbike'))
+                    price_str = row.get('Giá', '0')
+                    loc = row.get('Tỉnh thành', 'Vietnam')
+                    
+                    # Predict Cluster Logic
+                    try:
+                        p_val = float(str(price_str).replace('.','').replace(' đ','')) / 1e6 if isinstance(price_str, str) else 0
+                        p_input = {
+                            "Khoảng giá min": p_val,
+                            "Khoảng giá max": p_val,
+                            "Giá": p_val,
+                            "Năm đăng ký": float(row.get('Năm đăng ký', 2019)),
+                            "Số Km đã đi": float(row.get('Số Km đã đi', 10000))
+                        }
+                        c_id = predict_new_sample(p_input, cl_scaler, cl_model, cl_mode)
+                        seg_name, seg_color = cluster_map.get(c_id, ("N/A", "#666"))
+                    except:
+                        seg_name, seg_color = "Checking...", "#666"
+
+                    # Card UI
                     st.markdown(f"""
-                    <div class="rec-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div>
-                                <h3 style="margin: 0; color: #1E40AF; font-size: 18px;">{title}</h3>
-                                <div style="margin-top: 5px; color: #059669; font-weight: 700;">
-                                    💰 {price} &nbsp;•&nbsp; 📍 {row.get('Tỉnh thành', 'Vietnam')}
-                                </div>
-                            </div>
-                            <div style="background: #EFF6FF; color: #2563EB; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;">
-                                {score*100:.0f}% Match
-                            </div>
+                    <div class="rec-card-grid">
+                        <div>
+                            <div style="font-weight:bold; color:#1E40AF; height:45px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">{title}</div>
+                            <div style="color:#059669; font-weight:bold; margin-top:5px; font-size:16px;">💰 {price_str}</div>
+                            <div style="font-size:12px; color:#64748B;">📍 {loc}</div>
+                            <span class="cluster-badge" style="background-color:{seg_color}20; color:{seg_color};">🛡️ {seg_name}</span>
                         </div>
-                        <p style="color: #64748B; font-size: 14px; margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            {desc[:200]}...
-                        </p>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    with st.expander("View Details & Similar Bikes"):
-                        c1, c2 = st.columns([2, 1])
-                        with c1:
-                            st.markdown("**Full Description:**")
-                            st.write(desc)
-                        with c2:
-                            st.markdown("**You might also like:**")
-                            sim_items = recommend(df_bikes, cosine_sim, idx, 3)
-                            for _, s_row in sim_items.iterrows():
-                                s_title = s_row.get('title', 'Bike')
-                                st.markdown(f"• [{s_row['cosine_score']*100:.0f}%] {s_title[:30]}...")
+                    if st.button(f"View Details", key=f"btn_{idx}", use_container_width=True):
+                        st.session_state.selected_bike = row
+                        st.rerun()
+
+        # --- PAGINATION CONTROLS ---
+        st.markdown("<br>", unsafe_allow_html=True)
+        c_prev, c_page, c_next = st.columns([1, 2, 1])
+        with c_prev:
+            if st.session_state.page > 0:
+                if st.button("⬅️ Previous Page"):
+                    st.session_state.page -= 1
+                    st.rerun()
+        with c_page:
+            st.markdown(f"<div style='text-align:center; padding-top:5px;'>Page <b>{st.session_state.page + 1}</b> / {total_pages}</div>", unsafe_allow_html=True)
+        with c_next:
+            if st.session_state.page < total_pages - 1:
+                if st.button("Next Page ➡️"):
+                    st.session_state.page += 1
+                    st.rerun()
 
 # ==================================================
 # MODULE 2: ADMIN MODE (CLUSTERING)
@@ -345,21 +732,17 @@ if app_mode == "User Mode (Recommender)":
 elif app_mode == "Admin Mode (Clustering)":
     st.markdown("## 📊 Market Segmentation & Analytics")
 
-    # Controls (Đã sửa canh lề chuẩn pixel)
-    # Controls (Sửa lỗi: Xóa vertical_alignment, dùng spacer thủ công)
+    # Controls
     with st.container():
-        c1, c2, c3 = st.columns([3, 2.5, 2], gap="medium") # <-- Đã xóa vertical_alignment để tránh lỗi
+        c1, c2, c3 = st.columns([3, 2.5, 2], gap="medium") 
         
         with c1:
-            # Cột 1: Selectbox có nhãn, nên nó cao nhất
             model_choice = st.selectbox("Algorithm Selection:", 
                                       ["KMeans", "GMM", "K-Prototypes"])
         with c2:
-            # Cột 2: Chèn khoảng trắng cao 28px để đẩy Toggle xuống ngang hàng Selectbox
             st.markdown('<div style="height: 28px;"></div>', unsafe_allow_html=True)
             show_outliers = st.toggle("Show Outliers (Isolation Forest)", value=False)
         with c3:
-            # Cột 3: Tương tự cột 2
             st.markdown('<div style="height: 28px;"></div>', unsafe_allow_html=True)
             st.markdown(f"""
             <div style="margin-bottom: 5px; color: #64748B; font-size: 14px;">
@@ -379,14 +762,10 @@ elif app_mode == "Admin Mode (Clustering)":
         df_display = df_encoded.copy()
         
         if show_outliers and outliers is not None:
-            # Mark outliers as -1
             final_labels = np.where(outliers, -1, labels)
             df_display['Cluster'] = final_labels
             n_outliers = sum(outliers)
-            # X_visual includes everything
         else:
-            # If NOT showing outliers, we might want to filter them out or treat them as normal clusters
-            # Here we just hide the outlier distinction or filter them if they were detected
             if outliers is not None:
                 clean_mask = ~outliers
                 df_display = df_display[clean_mask]
@@ -404,7 +783,6 @@ elif app_mode == "Admin Mode (Clustering)":
         k1, k2, k3, k4 = st.columns(4)
         
         n_samples = len(df_display)
-        # Count unique clusters excluding -1 (outliers)
         unique_clusters = np.unique(final_labels)
         n_clusters = len(unique_clusters[unique_clusters != -1])
         
@@ -425,13 +803,11 @@ elif app_mode == "Admin Mode (Clustering)":
 
         # --- TAB 1: DASHBOARD ---
         with tab1:
-            # Top Row
             c_left, c_right = st.columns(2)
             with c_left:
                 st.markdown("##### 📊 Cluster Sizes")
                 size_counts = df_display['Cluster'].value_counts().reset_index()
                 size_counts.columns = ['Cluster', 'Count']
-                # Rename -1 to 'Outlier' for display
                 size_counts['Cluster'] = size_counts['Cluster'].replace({-1: 'Outlier'})
                 
                 fig_size = px.bar(size_counts, x='Cluster', y='Count', color='Cluster', 
@@ -444,14 +820,13 @@ elif app_mode == "Admin Mode (Clustering)":
                 st.markdown("##### 🌒 Silhouette Score (Estimate)")
                 if st.button("Calculate Silhouette (Interactive)"):
                     with st.spinner("Calculating..."):
-                        # Cannot calc silhouette with 1 cluster or only outliers
                         if len(np.unique(final_labels)) > 1:
                             avg_sil, sil_samples, sil_labels = calculate_silhouette_metrics(X_visual, final_labels)
                             sil_df = pd.DataFrame({'Cluster': sil_labels, 'Score': sil_samples})
                             avg_sil_per_cluster = sil_df.groupby('Cluster')['Score'].mean().reset_index()
                             
                             fig_sil = px.bar(avg_sil_per_cluster, x='Cluster', y='Score', color='Cluster',
-                                           template='plotly_white', range_y=[-0.1, 1])
+                                             template='plotly_white', range_y=[-0.1, 1])
                             fig_sil.add_hline(y=avg_sil, line_dash="dash", annotation_text=f"Avg: {avg_sil:.3f}")
                             st.plotly_chart(fig_sil, use_container_width=True)
                         else:
@@ -459,7 +834,6 @@ elif app_mode == "Admin Mode (Clustering)":
                 else:
                     st.info("Click to calculate (resource intensive).")
 
-            # Bottom Row
             c_pie, c_pca = st.columns([1, 2])
             with c_pie:
                 st.markdown("##### 🥧 Distribution")
@@ -484,13 +858,11 @@ elif app_mode == "Admin Mode (Clustering)":
         # --- TAB 2: PROFILING ---
         with tab2:
             st.markdown("##### 🔍 Cluster Characteristic Profiling")
-            # Only calculate profile on valid clusters (exclude outliers if needed, or keep them to analyze)
             centroids = calculate_cluster_profiles(df_display, final_labels)
             
             st.markdown("**Feature Heatmap (Normalized)**")
             if not centroids.empty:
                 heatmap_data = centroids.set_index('Cluster')
-                # Normalize
                 heatmap_data = (heatmap_data - heatmap_data.mean()) / heatmap_data.std()
                 fig_heat = px.imshow(heatmap_data, text_auto=True, aspect="auto", color_continuous_scale="RdBu_r")
                 st.plotly_chart(fig_heat, use_container_width=True)
@@ -531,7 +903,7 @@ elif app_mode == "Admin Mode (Clustering)":
                 pred = predict_new_sample(input_data, scaler, model, mode_type)
                 st.success(f"Predicted Cluster: {pred}")
 
-        # --- TAB 4: EVALUATION (NEW DEEP ANALYSIS) ---
+        # --- TAB 4: EVALUATION ---
         with tab4:
             st.markdown("##### 🔬 Deep Comparison Analysis (K=2 vs K=3)")
             st.caption("This module re-runs KMeans to generate a detailed stability report (Static Plot).")
