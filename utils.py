@@ -51,42 +51,59 @@ def preprocess_text(text, teencode, emoji_dict, stopwords):
     return ' '.join(cleaned_tokens).strip()
 
 # --- LOAD MODELS ---
-# --- LOAD MODELS ---
 @st.cache_resource
 def load_recommender_system():
-    # 1. Load Vectorizer (File này nhẹ nên vẫn để trong repo, load bình thường)
+    # 1. Load Vectorizer
     with open('models/tfidf_vectorizer.pkl', 'rb') as f:
         vectorizer = pickle.load(f)
 
-    # 2. Load Cosine Matrix (File nặng - Tải từ GitHub Release)
+    # 2. Load Cosine Matrix
     file_path = 'models/xe_cosine_sim.pkl'
-    
-    # --- BẮT ĐẦU SỬA TẠI ĐÂY ---
-    # Link bạn vừa copy từ GitHub Releases (Lưu ý: Phải là link trực tiếp để tải file)
-    # Ví dụ link đúng thường kết thúc bằng .pkl hoặc download/v1.0/xe_cosine_sim.pkl
     url = 'https://github.com/caothanhbang455/Project2_Recommendation-Clustering_System/releases/download/v1.0.0/xe_cosine_sim.pkl' 
 
-    # Kiểm tra nếu file chưa tồn tại thì tải về
     if not os.path.exists(file_path):
         try:
             with st.spinner('Đang tải dữ liệu model (lần đầu)... vui lòng đợi'):
                 response = requests.get(url)
-                response.raise_for_status() # Báo lỗi nếu link sai
+                response.raise_for_status()
                 with open(file_path, 'wb') as f:
                     f.write(response.content)
         except Exception as e:
             st.error(f"Không tải được file model từ GitHub Releases. Lỗi: {e}")
             return None, None, None, None
-    # --- KẾT THÚC SỬA ---
 
     with open(file_path, 'rb') as f:
         cosine_sim = pickle.load(f)
+
+    # --- SỬA LOGIC LOAD DATA ---
     try:
-        df = pd.read_csv('data/data_motobikes_cleaned_text.csv') 
+        df = pd.read_csv('data/data_motobikes_cleaned_text.csv')
     except:
         df = pd.read_csv('data/data_motobikes.csv')
+
+    # Bổ sung đầy đủ thông tin hiển thị từ file RAW
+    try:
+        df_raw = pd.read_csv('data/data_motobikes.csv')
+        
+        # --- CẬP NHẬT DANH SÁCH CỘT CẦN LẤY (Đã thêm các cột bị thiếu) ---
+        ui_cols = [
+            'Tiêu đề', 'Giá', 'Tỉnh thành', 'Năm đăng ký', 'Số Km đã đi', 
+            'Mô tả chi tiết', 'url', 'Thương hiệu', 'Dòng xe', 'Loại xe', 'Xuất xứ',
+            # Các cột vừa bổ sung:
+            'Dung tích xe', 'Khoảng giá min', 'Khoảng giá max', 'Trọng lượng', 'Chính sách bảo hành'
+        ]
+        
+        cols_to_merge = [c for c in ui_cols if c in df_raw.columns]
+        
+        for col in cols_to_merge:
+            df[col] = df_raw[col]
+            
+    except Exception as e:
+        pass
     
+    # Tạo TF-IDF Matrix
     tfidf_matrix = vectorizer.transform(df['content'].fillna('').astype(str))
+    
     return vectorizer, tfidf_matrix, cosine_sim, df
 
 
@@ -102,13 +119,12 @@ def load_clustering_model(algorithm):
     if cols_to_drop:
         df_encoded = df_encoded.drop(columns=cols_to_drop)
 
-    # 2. Load Isolation Forest (Global for all models based on notebook logic)
-    # NOTE: You need to save your IsolationForest model to this path first!
+    # 2. Load Isolation Forest
     try:
         with open('models/isolation_forest.pkl', 'rb') as f:
             iso_model = pickle.load(f)
     except:
-        iso_model = None # Handle case if user hasn't saved it yet
+        iso_model = None
 
     # 3. Load Specific Models
     if algorithm == 'KMeans':
@@ -148,26 +164,17 @@ def recommend(df, cosine_sim, idx, k):
 
 # --- CLUSTERING LOGIC ---
 def run_clustering_inference(df, scaler, model, iso_model, mode):
-    """
-    Returns: 
-    - labels: Cluster labels
-    - X_visual: Data for PCA
-    - outliers: Boolean array (True if outlier) -1 from IsoForest
-    """
     X_visual = None
     outliers = None
 
-    # 1. Detect Outliers (if model exists)
+    # 1. Detect Outliers
     if iso_model and mode == 'numeric':
         X_raw = df.values
-        # Note: Check if iso_model expects scaled or raw data. 
-        # In notebook: outlier_detector.fit_predict(X_scaled)
-        # So we must scale first
         X_scaled_iso = scaler.transform(X_raw)
         iso_preds = iso_model.predict(X_scaled_iso) 
-        outliers = iso_preds == -1 # True if outlier
+        outliers = iso_preds == -1 
     else:
-        outliers = np.zeros(len(df), dtype=bool) # No outliers detected
+        outliers = np.zeros(len(df), dtype=bool)
 
     # 2. Clustering
     if mode == 'numeric':
@@ -187,30 +194,22 @@ def run_clustering_inference(df, scaler, model, iso_model, mode):
         categorical_idx = [0, 1, 2, 3]
         
         labels = model.predict(X_combined, categorical=categorical_idx)
-        X_visual = X_num_scaled # PCA on numeric only
+        X_visual = X_num_scaled 
         
     return labels, X_visual, outliers
 
 # --- METRICS & PROFILING ---
 @st.cache_data
 def calculate_cluster_profiles(df, labels):
-    """Calculates mean values for numeric cols per cluster"""
     df_temp = df.copy()
     df_temp['Cluster'] = labels
-    
-    # Lấy danh sách cột số
     numeric_cols = df_temp.select_dtypes(include=[np.number]).columns.tolist()
-    
-    # QUAN TRỌNG: Loại bỏ cột 'Cluster' ra khỏi danh sách tính toán trung bình
     if 'Cluster' in numeric_cols:
         numeric_cols.remove('Cluster')
-        
-    # Groupby và tính mean trên các cột còn lại
     return df_temp.groupby('Cluster')[numeric_cols].mean().reset_index()
 
 @st.cache_data
 def calculate_silhouette_metrics(X_scaled, labels):
-    # Sampling for performance
     if len(X_scaled) > 5000:
         indices = np.random.choice(len(X_scaled), 5000, replace=False)
         X_sample = X_scaled[indices]
