@@ -225,6 +225,7 @@ def calculate_silhouette_metrics(X_scaled, labels):
 def predict_new_sample(input_data, scaler, model, mode_type):
     try:
         if mode_type == 'numeric':
+            
             input_df = pd.DataFrame([input_data])
             input_scaled = scaler.transform(input_df.values)
             label = model.predict(input_scaled)[0]
@@ -244,4 +245,5 @@ def predict_new_sample(input_data, scaler, model, mode_type):
             label = model.predict(input_combined, categorical=categorical_idx)[0]
             return label
     except Exception as e:
+        print("Error", e)
         return None

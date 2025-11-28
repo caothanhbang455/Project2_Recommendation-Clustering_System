@@ -401,7 +401,6 @@ elif app_mode == "User Mode (Recommender)":
         # --- DYNAMIC CLUSTER MAPPING (GMM + ISOLATION FOREST) ---
         # 1. Load Model & Data
         cl_scaler, cl_model, cl_iso_model, df_encoded, cl_mode = load_clustering_model("GMM")
-        
         cluster_map = {}
         
         if cl_model is not None and df_encoded is not None:
@@ -593,16 +592,55 @@ elif app_mode == "User Mode (Recommender)":
             
             # Logic tính toán cụm phân khúc (Cluster) - Lấy lại logic cũ
             try:
-                # Tạo data input giả lập để predict
+                # Tạo data input để predict
                 p_val = current_price / 1e6
-                p_input = {
-                    "Khoảng giá min": p_val, "Khoảng giá max": p_val, "Giá": p_val,
-                    "Năm đăng ký": float(bike.get('Năm đăng ký', 2019)),
-                    "Số Km đã đi": float(bike.get('Số Km đã đi', 10000))
-                }
+                year_val = float(bike.get('Năm đăng ký', 2019))
+                km_val = float(bike.get('Số Km đã đi', 10000))
+                
+                # Find matching row in df_encoded based on numerical features
+                # We'll match on Giá, Năm đăng ký, and Số Km đã đi with some tolerance
+                tolerance = 0.01  # 1% tolerance for price matching
+                
+                matched_row = df_encoded[
+                    (abs(df_encoded['Giá'] - p_val) < tolerance) &
+                    (df_encoded['Năm đăng ký'] == year_val) &
+                    (df_encoded['Số Km đã đi'] == km_val)
+                ]
+                
+                # If we found a match, use the encoded categorical values
+                if len(matched_row) > 0:
+                    first_match = matched_row.iloc[0]
+                    p_input = {
+                        "Thương hiệu": int(first_match['Thương hiệu']),
+                        "Dòng xe": int(first_match['Dòng xe']),
+                        "Loại xe": int(first_match['Loại xe']),
+                        "Xuất xứ": int(first_match['Xuất xứ']),
+                        "Khoảng giá min": float(first_match['Khoảng giá min']),
+                        "Khoảng giá max": float(first_match['Khoảng giá max']),
+                        "Giá": float(first_match['Giá']),
+                        "Năm đăng ký": float(first_match['Năm đăng ký']),
+                        "Số Km đã đi": float(first_match['Số Km đã đi'])
+                    }
+                else:
+                    # Fallback: use default values if no match found
+                    p_input = {
+                        "Thương hiệu": 0,
+                        "Dòng xe": 0,
+                        "Loại xe": 0,
+                        "Xuất xứ": 0,
+                        "Khoảng giá min": p_val,
+                        "Khoảng giá max": p_val,
+                        "Giá": p_val,
+                        "Năm đăng ký": year_val,
+                        "Số Km đã đi": km_val
+                    }
+                
                 c_id = predict_new_sample(p_input, cl_scaler, cl_model, cl_mode)
                 c_name, c_color = cluster_map.get(c_id, ("Không xác định", "#94A3B8"))
                 
+
+
+
                 st.markdown(f"""
                 <div style="margin-top: 10px;">
                     <span style="font-size:13px; color:#64748B;">Phân khúc AI gợi ý:</span><br>
