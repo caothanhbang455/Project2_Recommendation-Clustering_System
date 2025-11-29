@@ -13,43 +13,42 @@ This project provides a motorbike recommendation system and market segmentation 
 
 ## Project Structure
 
-.
+D:.
 │ .gitattributes
 │ app.py
 │ requirements.txt
 │ utils.py
 │
-├───.devcontainer
-│ devcontainer.json
+├── .devcontainer
+│ └── devcontainer.json
 │
-├───assets
-│ hinh_elbow.png
+├── assets
+│ └── hinh_elbow.png
 │
-├───data
-│ data_motobikes.csv
-│ data_motobikes_cleaned_text.csv
-│ encoded_data_motobikes.csv
+├── data
+│ ├── data_motobikes.csv
+│ ├── data_motobikes_cleaned_text.csv
+│ └── encoded_data_motobikes.csv
 │
-├───files
-│ emojicon.txt
-│ english-vnmese.txt
-│ teencode.txt
-│ vietnamese-stopwords.txt
-│ wrong-word.txt
+├── files
+│ ├── emojicon.txt
+│ ├── english-vnmese.txt
+│ ├── teencode.txt
+│ ├── vietnamese-stopwords.txt
+│ └── wrong-word.txt
 │
-├───models
-│ gmm.pkl
-│ isolation_forest.pkl
-│ kmeans.pkl
-│ kproto.pkl
-│ scaler_robust.pkl
-│ scaler_standard_kproto.pkl
-│ tfidf_vectorizer.pkl
-│ xe_cosine_sim.pkl
+├── models
+│ ├── gmm.pkl
+│ ├── isolation_forest.pkl
+│ ├── kmeans.pkl
+│ ├── kproto.pkl
+│ ├── scaler_robust.pkl
+│ ├── scaler_standard_kproto.pkl
+│ ├── tfidf_vectorizer.pkl
+│ └── xe_cosine_sim.pkl
 │
-└───pycache
-utils.cpython-310.pyc
-
+└── pycache
+└── utils.cpython-310.pyc
 
 
 ---
