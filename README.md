@@ -1,6 +1,6 @@
 # Motorbike Recommendation & Market Segmentation Analysis
 
-**Implemented by:** NamAn ThanhBang  
+**Implemented by:** NamAn & ThanhBang  
 **Supervisor:** Khuat Thuy Phuong
 
 ---
@@ -66,9 +66,9 @@ D:.
 
 ---
 
-## Installation
+## Installation & Run
 
 ```bash
 pip install -r requirements.txt
 
-python app.py
+streamlit run app.py
