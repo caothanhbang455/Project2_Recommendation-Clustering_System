@@ -1,6 +1,6 @@
 # Motorbike Recommendation & Market Segmentation Analysis
 
-**Implemented by:** NamAn Thanh Bang  
+**Implemented by:** NamAn ThanhBang  
 **Supervisor:** Khuat Thuy Phuong
 
 ---
